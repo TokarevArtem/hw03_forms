@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from posts.models import Post, Group, User
+from posts.models import Group, Post, User
 from yatube.settings import POSTS_NUMBER
 from django.core.paginator import Paginator
 from posts.forms import PostForm
@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 
 
 def index(request):
-    posts = Post.objects.all()
+    posts = Post.objects.select_related('author')
     paginator = Paginator(posts, POSTS_NUMBER)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -19,7 +19,7 @@ def index(request):
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
-    posts = Post.objects.filter(group=group)[:POSTS_NUMBER]
+    posts = Post.objects.filter(group=group)
     paginator = Paginator(posts, POSTS_NUMBER)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -37,11 +37,9 @@ def profile(request, username):
     paginator = Paginator(posts, POSTS_NUMBER)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    count = posts.count()
     context = {
         'author': author,
         'page_obj': page_obj,
-        'count': count,
     }
     return render(request, 'posts/profile.html', context)
 
@@ -68,24 +66,15 @@ def post_create(request):
 
 @login_required
 def post_edit(request, post_id):
-    post = Post.objects.get(pk=post_id)
-    form = PostForm(None, instance=post)
+    post = get_object_or_404(
+        Post.objects.select_related('group', 'author'),
+        pk=post_id
+    )
     if request.user != post.author:
-        return redirect('posts:post_detail', post_id=post_id)
-    if request.method == 'POST':
-        form = PostForm(request.POST, instance=post)
-        if form.is_valid():
-            form.save()
-            return redirect('posts:post_detail', post_id=post_id)
-        return render(request, 'posts/create_post.html',
-                      {'form': form, 'is_edit': True})
-    return render(request, 'posts/create_post.html',
-                  {'form': form, 'is_edit': True})
-
-
-def authorized_only(func):
-    def check_user(request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return func(request, *args, **kwargs)
-        return redirect('/auth/login/')
-    return check_user
+        redirect('posts:post_detail', post.pk)
+    form = PostForm(request.POST or None, instance=post)
+    if form.is_valid():
+        form.save()
+        return redirect('posts:post_detail', post.pk)
+    context = {'form': form, 'post': post, 'is_edit': True, }
+    return render(request, 'posts/create_post.html', context)

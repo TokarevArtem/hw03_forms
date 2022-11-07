@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}
-Все посты пользователя {{ author }}
+Все посты пользователя {{ author.get_full_name }}
 {% endblock %} 
 {% block content %}
   <body>  
@@ -19,12 +19,10 @@
           <p>
             {{ post.text|linebreaksbr }}
           </p>
-          <a href="{% url 'posts:post_detail' post.id %}">Подробная информация </a>
+          <a href="{% url 'posts:post_detail' post.id %}">подробная информация </a>
         
-               
-        {% if post.group %}   
-        <a href="{% url 'posts:group_list' post.group.slug %}">Все записи группы</a>
-    {% endif %}
+                  
+        <a href="{% url 'posts:group_list' post.group.slug %}">все записи группы</a>
       </article>       
         {% if not forloop.last %}<hr>{% endif %} 
         {% endfor %}
