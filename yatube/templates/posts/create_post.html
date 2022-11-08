@@ -20,8 +20,11 @@
       </div>
       <div class="card-body">
         {% load user_filters %}
-        <form method="post">
-          {% csrf_token %}
+        <form method="post" action = 
+        {% if is_edit %} "{% url 'posts:post_edit' post_id=post.id %}"
+        {% else %} "{% url 'posts:post_create' %}"
+        {% endif %}>
+        {% csrf_token %}
           <div class="form-group row my-3 p-3">
             <label for="form.text.id_for_label">
               Текст поста
