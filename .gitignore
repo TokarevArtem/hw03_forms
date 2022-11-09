@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 #static
-yatube/static
+/yatube/static
 
 # C extensions
 *.so
