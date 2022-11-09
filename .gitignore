@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+#static
+yatube/static/
+
 # C extensions
 *.so
 
@@ -144,4 +147,4 @@ dmypy.json
 .history/
 
 .mypy_cache
-yatube/static/
+
