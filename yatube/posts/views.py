@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from posts.models import Group, Post, User
 from yatube.settings import POSTS_NUMBER
 from django.core.paginator import Paginator
@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 
 
 def index(request):
-    posts = Post.objects.select_related('author')
+    posts = Post.objects.select_related('author', 'group')
     paginator = Paginator(posts, POSTS_NUMBER)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -19,21 +19,20 @@ def index(request):
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
-    posts = Post.objects.filter(group=group)
+    posts = Post.objects.select_related('author', 'group')
     paginator = Paginator(posts, POSTS_NUMBER)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
         'group': group,
-        'posts': posts,
-        'page_obj': page_obj
+        'page_obj': page_obj,
     }
     return render(request, 'posts/group_list.html', context)
 
 
 def profile(request, username):
     author = get_object_or_404(User, username=username)
-    posts = Post.objects.filter(author=author)
+    posts = author.posts.select_related('group')
     paginator = Paginator(posts, POSTS_NUMBER)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -67,7 +66,7 @@ def post_create(request):
 @login_required
 def post_edit(request, post_id):
     post = get_object_or_404(
-        Post.objects.select_related('group', 'author'),
+        Post,
         pk=post_id
     )
     if request.user != post.author:
