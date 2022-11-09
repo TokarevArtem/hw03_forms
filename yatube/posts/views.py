@@ -1,9 +1,10 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from posts.models import Group, Post, User
-from yatube.settings import POSTS_NUMBER
-from django.core.paginator import Paginator
-from posts.forms import PostForm
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404, redirect, render
+from yatube.settings import POSTS_NUMBER
+
+from posts.forms import PostForm
+from posts.models import Group, Post, User
 
 
 def index(request):
@@ -19,7 +20,7 @@ def index(request):
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
-    posts = Post.objects.select_related('author', 'group')
+    posts = Post.objects.select_related('group')
     paginator = Paginator(posts, POSTS_NUMBER)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
